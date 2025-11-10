@@ -291,6 +291,11 @@ class Backtester:
         logger.info("Starting backtest...")
         logger.info(f"Initial balance: ${self.initial_balance:.2f}")
 
+        # Track signal statistics
+        signal_count = {'LONG': 0, 'SHORT': 0, 'HOLD': 0}
+        max_score = 0
+        min_score = 0
+
         # Ensure we have enough data for indicators
         min_length = max(Config.RSI_PERIOD, Config.EMA_PERIOD, Config.ATR_PERIOD) + 50
 
@@ -328,6 +333,18 @@ class Backtester:
                 indicators_15m,
                 indicators_4h
             )
+
+            # Track signal statistics
+            signal_count[signal] += 1
+            max_score = max(max_score, score)
+            min_score = min(min_score, score)
+
+            # Log high score signals for debugging
+            if abs(score) >= 60:
+                logger.debug(
+                    f"Strong signal: {signal} | Score: {score} | "
+                    f"Price: ${current_price:.2f} | {reason}"
+                )
 
             # Check stops
             self.check_stops(current_price, current_timestamp)
@@ -373,7 +390,15 @@ class Backtester:
                 "End of backtest"
             )
 
+        # Log signal statistics
         logger.info("Backtest completed")
+        logger.info(f"Signal Statistics:")
+        logger.info(f"  LONG signals: {signal_count['LONG']}")
+        logger.info(f"  SHORT signals: {signal_count['SHORT']}")
+        logger.info(f"  HOLD signals: {signal_count['HOLD']}")
+        logger.info(f"  Max score: {max_score}")
+        logger.info(f"  Min score: {min_score}")
+        logger.info(f"  Signal threshold: LONG>={Config.SIGNAL_THRESHOLD_LONG}, SHORT<=-{Config.SIGNAL_THRESHOLD_LONG}")
 
     def generate_report(self) -> Dict:
         """
@@ -470,7 +495,7 @@ class Backtester:
 def main():
     """Run backtest"""
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,  # Changed to DEBUG to see signal details
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
 
