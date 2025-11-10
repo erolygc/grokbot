@@ -65,9 +65,9 @@ class Config:
     }
 
     # Signal Generation
-    SIGNAL_THRESHOLD_LONG = 50
-    SIGNAL_THRESHOLD_SHORT = -50
-    MOMENTUM_VETO_THRESHOLD = -0.10  # -10% ATR change
+    SIGNAL_THRESHOLD_LONG = 40
+    SIGNAL_THRESHOLD_SHORT = -40
+    MOMENTUM_VETO_THRESHOLD = -0.50  # -50% ATR change (effectively disabled)
 
     # Cooldown period after wrong signal (seconds)
     COOLDOWN_PERIOD = 600  # 10 minutes
