@@ -55,7 +55,7 @@ class Config:
     MACD_SLOW = 26
     MACD_SIGNAL = 9
     ATR_PERIOD = 14
-    VOLUME_SPIKE_THRESHOLD = 2.0  # 200% of average
+    VOLUME_SPIKE_THRESHOLD = 3.0  # 300% of average (ultra high quality)
 
     # Timeframes for multi-timeframe analysis
     TIMEFRAMES = {
@@ -64,10 +64,10 @@ class Config:
         '4h': {'weight': 50, 'candles': 250}
     }
 
-    # Signal Generation
-    SIGNAL_THRESHOLD_LONG = 80
-    SIGNAL_THRESHOLD_SHORT = -80
-    MOMENTUM_VETO_THRESHOLD = -0.05  # -5% ATR change
+    # Signal Generation - ULTRA HIGH QUALITY MODE
+    SIGNAL_THRESHOLD_LONG = 100  # Only perfect signals
+    SIGNAL_THRESHOLD_SHORT = -100  # Only perfect signals
+    MOMENTUM_VETO_THRESHOLD = -0.05  # -5% ATR change (protective)
 
     # Cooldown period after wrong signal (seconds)
     COOLDOWN_PERIOD = 600  # 10 minutes

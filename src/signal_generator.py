@@ -55,48 +55,36 @@ class SignalGenerator:
             score -= 30
             reasons.append("4h EMA downtrend")
 
-        # Rule 2: 15m RSI Zone (weight: 30) - ENHANCED
+        # Rule 2: 15m RSI Reversal (weight: 35) - STRICT MODE
         rsi_15m = indicators_15m.get('rsi')
         rsi_prev_15m = indicators_15m.get('rsi_prev')
 
         if rsi_15m is not None and rsi_prev_15m is not None:
-            # LONG signals: RSI oversold or recovering from oversold
-            if rsi_15m < Config.RSI_OVERSOLD:
-                score += 30
-                reasons.append(f"15m RSI oversold zone ({rsi_15m:.1f})")
-            elif rsi_prev_15m < Config.RSI_OVERSOLD and rsi_15m >= Config.RSI_OVERSOLD:
-                score += 35  # Extra 5 points for actual reversal
+            # LONG signals: Only actual reversal from oversold
+            if rsi_prev_15m < Config.RSI_OVERSOLD and rsi_15m >= Config.RSI_OVERSOLD:
+                score += 35  # Strong reversal signal
                 reasons.append(f"15m RSI reversal from oversold ({rsi_15m:.1f})")
-            elif Config.RSI_OVERSOLD <= rsi_15m <= 45:
-                score += 20  # Partial score for favorable zone
-                reasons.append(f"15m RSI favorable zone ({rsi_15m:.1f})")
 
-            # SHORT signals: RSI overbought or dropping from overbought
-            elif rsi_15m > Config.RSI_OVERBOUGHT:
-                score -= 30
-                reasons.append(f"15m RSI overbought zone ({rsi_15m:.1f})")
+            # SHORT signals: Only actual reversal from overbought
             elif rsi_prev_15m > Config.RSI_OVERBOUGHT and rsi_15m <= Config.RSI_OVERBOUGHT:
-                score -= 35  # Extra 5 points for actual reversal
+                score -= 35  # Strong reversal signal
                 reasons.append(f"15m RSI reversal from overbought ({rsi_15m:.1f})")
-            elif 55 <= rsi_15m <= Config.RSI_OVERBOUGHT:
-                score -= 20  # Partial score for favorable zone
-                reasons.append(f"15m RSI favorable zone ({rsi_15m:.1f})")
 
         # Rule 3: 1m Volume Spike (weight: 40)
         if indicators_1m.get('volume_spike', False):
             score += 40
             reasons.append("1m volume spike detected")
 
-        # BONUS: Multi-timeframe trend alignment (weight: 20)
+        # BONUS: Multi-timeframe trend alignment (weight: 30) - CRITICAL FOR HIGH ACCURACY
         ema_trend_1m = indicators_1m.get('ema_trend', 0)
         ema_trend_15m = indicators_15m.get('ema_trend', 0)
 
         if ema_trend_1m == ema_trend_15m == ema_trend_4h:
             if ema_trend_4h > 0:
-                score += 20
+                score += 30
                 reasons.append("All timeframes bullish aligned")
             elif ema_trend_4h < 0:
-                score -= 20
+                score -= 30
                 reasons.append("All timeframes bearish aligned")
 
         # BONUS: Strong momentum (weight: 10)
