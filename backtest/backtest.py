@@ -476,11 +476,12 @@ def main():
 
     backtester = Backtester()
 
-    # Fetch historical data (30 days)
+    # Fetch historical data (6 days - Gate.io testnet limit: 10,000 candles)
+    # 6 days * 24 hours * 60 minutes = 8,640 candles < 10,000 limit
     df_1m = backtester.fetch_historical_data(
         Config.TRADING_PAIR,
         '1m',
-        days=30
+        days=6
     )
 
     # Prepare multi-timeframe data
