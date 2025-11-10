@@ -299,8 +299,13 @@ class Backtester:
         # Ensure we have enough data for indicators
         min_length = max(Config.RSI_PERIOD, Config.EMA_PERIOD, Config.ATR_PERIOD) + 50
 
+        logger.info(f"Starting backtest loop: Processing {len(df_1m) - min_length} candles")
+        logger.info(f"min_length = {min_length}, total candles = {len(df_1m)}")
+
         # Iterate through 1m candles
+        loop_count = 0
         for i in range(min_length, len(df_1m)):
+            loop_count += 1
             # Get current data windows
             current_1m = df_1m.iloc[:i+1]
             current_timestamp = current_1m.iloc[-1]['timestamp']
@@ -311,6 +316,8 @@ class Backtester:
             current_4h = df_4h[df_4h['timestamp'] <= current_timestamp]
 
             if len(current_15m) < min_length or len(current_4h) < min_length:
+                if loop_count == 1:
+                    logger.debug(f"Skipping early candles: 15m={len(current_15m)}, 4h={len(current_4h)}, min_length={min_length}")
                 continue
 
             # Calculate indicators
@@ -327,12 +334,21 @@ class Backtester:
                 '4h'
             )
 
+            # Log first indicator values for debugging
+            if loop_count == 1:
+                logger.debug(f"First indicators_1m: {list(indicators_1m.keys())}")
+                logger.debug(f"Sample values - RSI: {indicators_1m.get('rsi')}, EMA: {indicators_1m.get('ema')}")
+
             # Generate signal
             signal, score, reason = self.signal_generator.generate_signal(
                 indicators_1m,
                 indicators_15m,
                 indicators_4h
             )
+
+            # Log first few signals for debugging
+            if loop_count <= 5:
+                logger.debug(f"Loop {loop_count}: signal={signal}, score={score}, reason={reason}")
 
             # Track signal statistics
             signal_count[signal] += 1
@@ -392,6 +408,7 @@ class Backtester:
 
         # Log signal statistics
         logger.info("Backtest completed")
+        logger.info(f"Total loop iterations: {loop_count}")
         logger.info(f"Signal Statistics:")
         logger.info(f"  LONG signals: {signal_count['LONG']}")
         logger.info(f"  SHORT signals: {signal_count['SHORT']}")
