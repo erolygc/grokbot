@@ -296,15 +296,19 @@ class Backtester:
         max_score = 0
         min_score = 0
 
-        # Ensure we have enough data for indicators
-        min_length = max(Config.RSI_PERIOD, Config.EMA_PERIOD, Config.ATR_PERIOD) + 50
+        # Ensure we have enough data for indicators (different for each timeframe)
+        min_length_1m = max(Config.RSI_PERIOD, Config.EMA_PERIOD, Config.ATR_PERIOD) + 50
+        min_length_15m = max(Config.RSI_PERIOD, Config.EMA_PERIOD, Config.ATR_PERIOD) + 10
+        min_length_4h = max(Config.RSI_PERIOD, Config.EMA_PERIOD, Config.ATR_PERIOD) + 5
 
-        logger.info(f"Starting backtest loop: Processing {len(df_1m) - min_length} candles")
-        logger.info(f"min_length = {min_length}, total candles = {len(df_1m)}")
+        logger.info(f"Starting backtest loop: Processing {len(df_1m) - min_length_1m} candles")
+        logger.info(f"Data available: 1m={len(df_1m)}, 15m={len(df_15m)}, 4h={len(df_4h)}")
+        logger.info(f"Min lengths: 1m={min_length_1m}, 15m={min_length_15m}, 4h={min_length_4h}")
 
         # Iterate through 1m candles
         loop_count = 0
-        for i in range(min_length, len(df_1m)):
+        skipped_count = 0
+        for i in range(min_length_1m, len(df_1m)):
             loop_count += 1
             # Get current data windows
             current_1m = df_1m.iloc[:i+1]
@@ -315,9 +319,11 @@ class Backtester:
             current_15m = df_15m[df_15m['timestamp'] <= current_timestamp]
             current_4h = df_4h[df_4h['timestamp'] <= current_timestamp]
 
-            if len(current_15m) < min_length or len(current_4h) < min_length:
-                if loop_count == 1:
-                    logger.debug(f"Skipping early candles: 15m={len(current_15m)}, 4h={len(current_4h)}, min_length={min_length}")
+            # Check if we have enough data for each timeframe
+            if len(current_15m) < min_length_15m or len(current_4h) < min_length_4h:
+                skipped_count += 1
+                if skipped_count == 1:
+                    logger.debug(f"Skipping early candles: 15m={len(current_15m)}/{min_length_15m}, 4h={len(current_4h)}/{min_length_4h}")
                 continue
 
             # Calculate indicators
@@ -409,6 +415,8 @@ class Backtester:
         # Log signal statistics
         logger.info("Backtest completed")
         logger.info(f"Total loop iterations: {loop_count}")
+        logger.info(f"Skipped iterations (insufficient data): {skipped_count}")
+        logger.info(f"Processed iterations: {loop_count - skipped_count}")
         logger.info(f"Signal Statistics:")
         logger.info(f"  LONG signals: {signal_count['LONG']}")
         logger.info(f"  SHORT signals: {signal_count['SHORT']}")
